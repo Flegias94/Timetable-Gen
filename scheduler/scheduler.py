@@ -163,7 +163,7 @@ class Scheduler:
                 return 1
         else:
             if hour == 8:
-                return 2
+                return 5
             elif 10 <= hour < 16:
                 return 3
             elif hour == 16:

@@ -1,13 +1,11 @@
 from scheduler.scheduler import Scheduler
-from mock_data import load_mock_data
+from csv_loader import load_all_data
 import csv
 from models.entities import Course
 from utils.stats import print_teacher_workload
 
-
-rooms, teachers, courses, student_groups = load_mock_data()
-
-scheduler = Scheduler(rooms, teachers, courses, student_groups)
+rooms, teachers, courses, student_groups = load_all_data()
+scheduler = Scheduler(rooms, teachers, courses, student_groups, debug_mode=True)
 result = scheduler.assign_courses()
 
 print("📅 Schedule:")
