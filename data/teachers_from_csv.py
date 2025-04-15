@@ -1,7 +1,12 @@
 from models.entities import Teacher
+from scheduler.timeslots import generate_all_timeslots
+
+    
 
 
 def load_teachers():
+    all_slots = generate_all_timeslots()
+    preferred_slots = [slot for slot in all_slots if 10 <= int(slot.split("-")[1]) < 16]
     teachers = [
         {
             "id": "adrian_liviu_scutariu",
@@ -729,5 +734,10 @@ def load_teachers():
             ],
         },
     ]
+    for teacher in teachers:
+        if not teacher.available_slots:
+            teacher.available_slots = all_slots
+        if teacher.preferred_slots is None:
+            teacher.preferred_slots = preferred_slots
 
-    return teachers
+    return [Teacher(**t) for t in teachers]

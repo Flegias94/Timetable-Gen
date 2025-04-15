@@ -201,26 +201,33 @@ class Scheduler:
         teacher = next((t for t in self.teachers if t.id == session.teacher_id), None)
         group_ids = [g.id for g in group_combo]
 
-        if not all(feature in room.features for feature in session.required_features):
+        # 🔁 NEW: Map session type to expected room feature
+        type_to_feature = {
+            "seminary": "seminar",
+            "lab": "laborator",
+            "lecture": "curs"
+        }
+        required_feature = type_to_feature.get(session.type)
+
+        if required_feature not in room.features:
             if self.debug_mode:
-                print(f"❌ Room {room.id} missing required features for {session.id}")
+                print(f"❌ Room {room.id} not suitable for {session.type} session {session.id}")
             return False
 
+        # Capacity check
         total_size = sum(g.size for g in group_combo)
         if total_size > room.capacity:
             if self.debug_mode:
-                print(
-                    f"❌ Room {room.id} too small for {session.id} (needs {total_size})"
-                )
+                print(f"❌ Room {room.id} too small for {session.id} (needs {total_size})")
             return False
 
+        # Teacher availability
         if teacher is None or timeslot not in teacher.available_slots:
             if self.debug_mode:
-                print(
-                    f"❌ Teacher {session.teacher_id} not available at {timeslot} for {session.id}"
-                )
+                print(f"❌ Teacher {session.teacher_id} not available at {timeslot} for {session.id}")
             return False
 
+        # Conflict check with existing schedule
         for assignment in self.schedule.values():
             if assignment["timeslot"] == timeslot:
                 if assignment["room"] == room.id:
@@ -229,15 +236,13 @@ class Scheduler:
                     return False
                 if assignment["teacher_id"] == session.teacher_id:
                     if self.debug_mode:
-                        print(
-                            f"❌ Teacher {session.teacher_id} already teaching at {timeslot}"
-                        )
+                        print(f"❌ Teacher {session.teacher_id} already teaching at {timeslot}")
                     return False
                 if set(assignment["group_ids"]) & set(group_ids):
                     if self.debug_mode:
-                        print(
-                            f"❌ Group conflict at {timeslot} for {session.id}: {group_ids}"
-                        )
+                        print(f"❌ Group conflict at {timeslot} for {session.id}: {group_ids}")
                     return False
+
+        return True
 
         return True
